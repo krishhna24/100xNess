@@ -1,5 +1,7 @@
 # Day 01 — Monorepo Architecture & System Foundations
 
+**Saturday, April 18, 2026**
+
 ## 🎯 Objective
 
 Set up a scalable monorepo using Turborepo to support a high-performance synthetic trading platform (Exness-like system).
