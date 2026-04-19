@@ -1,13 +1,90 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+
+  assets Asset[]
+  orders Order[]
+
+  @@index([email])
+}
+
+model Asset {
+  id       String @id @default(uuid()) @db.Uuid
+  symbol   Symbol
+  balance  BigInt // safer for financial values
+  decimals Int    @default(2)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, symbol])
+  @@index([userId])
+}
+
+model Order {
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @db.Uuid
+
+  side   Side
+  status OrderStatus @default(open)
+
+  qty          BigInt
+  qtyDecimals  Int    @default(2)
+
+  openingPrice BigInt
+  closingPrice BigInt?
+
+  pnl      BigInt?
+  decimals Int @default(4)
+
+  leverage Int @default(1)
+  margin   BigInt
+
+  takeProfit BigInt?
+  stopLoss   BigInt?
+
+  closeReason CloseReason?
+
+  createdAt DateTime @default(now())
+  closedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([createdAt])
+}
+
+enum Symbol {
+  USDC
+  BTC
+}
+
+enum Side {
+  long
+  short
+}
+
+enum OrderStatus {
+  open
+  closed
+}
+
+enum CloseReason {
+  TakeProfit
+  StopLoss
+  Manual
+  Liquidation
 }
