@@ -6,13 +6,16 @@ services:
     container_name: exness-container
     restart: unless-stopped
 
+    env_file:
+      - .env
+
     environment:
-      POSTGRES_USER: krishhna_dev
-      POSTGRES_PASSWORD: Krishhna@0024
-      POSTGRES_DB: exness_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
 
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -21,8 +24,10 @@ services:
     image: redis:7-alpine
     container_name: exness-redis
     restart: unless-stopped
+
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
+
     volumes:
       - redis_data:/data
 
