@@ -198,7 +198,7 @@ A real trading DB would include:
 * Orders (requests)
 * Fills (executions)
 * Positions (open exposure)
-* Instruments (BTC, ETH, etc.)
+* Instruments (BTC, ETH, etc.
 
 ---
 
