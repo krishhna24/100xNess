@@ -1,6 +1,7 @@
 import { prisma } from "@repo/db";
 import { Request, Response } from "express";
 import { DepositBalanceBodySchema, GetBalanceByAssetParamsSchema } from "../schemas/balance.type";
+import { redis } from "@repo/redis";
 
 export const getBalance = async (req: Request, res: Response) => {
     try {
@@ -115,6 +116,21 @@ export const depositBalance = async (req: Request, res: Response) => {
                 decimals: true
             }
         });
+
+        await redis.xadd(
+            "engine-stream",
+            "*",
+            "data",
+            JSON.stringify({
+                kind: "balance-update",
+                payload: {
+                    userId,
+                    symbol,
+                    newBalance: updated.balance,
+                    decimals: updated.decimals
+                }
+            })
+        )
 
         res.json({ success: true, asset: updated });
 
