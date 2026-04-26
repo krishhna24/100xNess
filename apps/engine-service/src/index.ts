@@ -5,7 +5,7 @@ import { redis } from "@repo/redis"
 type UserBalances = Record<string, number>;
 
 let open_orders: Order[] = [];
-let balances: Record<string, Record<string, number>> = {};
+let balances: Record<string, UserBalances> = {};
 
 let prices: Record<string, number> = {};
 let bidPrices: Record<string, number> = {};
