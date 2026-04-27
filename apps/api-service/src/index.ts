@@ -2,8 +2,15 @@ import express from "express"
 import { configDotenv } from "dotenv"
 import cors from "cors"
 import cookieParser from "cookie-parser";
+import { router } from "./routes";
+import { redis } from "@repo/redis";
 
 configDotenv();
+
+redis.connect().catch((err) => {
+    console.error("[redis] failed to connect:", err.message);
+    process.exit(1);
+});
 
 const app = express();
 
@@ -25,6 +32,8 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
+
+app.use("/api", router);
 
 app.get("/health", (req, res) => {
     res.json({ status: "OK", timestamp: new Date().toISOString() });

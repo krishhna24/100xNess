@@ -12,11 +12,14 @@ const addToStream = async (id: string, request: unknown) => {
 }
 
 export async function sendRequestAndWait(id: string, request: unknown) {
-    const [, callback] = await Promise.all([
-        addToStream(id, request),
-        subscriber.waitForMessage(id),
-    ]);
-    return callback;
+    const waitPromise = subscriber.waitForMessage(id);
+    try {
+        await addToStream(id, request);
+    } catch (err) {
+        subscriber.cancelWait(id);
+        throw err;
+    }
+    return waitPromise;
 }
 
 export const getOrders = async (req: Request, res: Response) => {
@@ -183,12 +186,21 @@ export const closeOrder = async (req: Request, res: Response) => {
             },
         };
 
-        await sendRequestAndWait(orderId, payload);
+        const callback = await sendRequestAndWait(orderId, payload);
+
+        if (callback.status === "order_not_found")
+            return res.status(404).json({ error: "Order not found in engine" });
+
+        if (callback.status === "invalid_close_request")
+            return res.status(400).json({ error: "Invalid close request" });
+
+        if (callback.status !== "closed")
+            return res.status(400).json({ error: `Close failed: ${callback.status}` });
 
         res.json({ message: "Order closed successfully", orderId });
 
     } catch (err) {
-        console.error("Error in createOrder: ", err);
+        console.error("Error in closeOrder: ", err);
         return res.status(500).json({ success: false, error: "Internal server error" });
     }
 }
