@@ -36,6 +36,12 @@ export type EngineMessageKind =
     | "price-update"
     | "balance-update";
 
+export interface BalanceAsset {
+    symbol: string;
+    balance: number;
+    decimals: number;
+}
+
 export interface CreateOrderPayload {
     id: string;
     userId: string;
@@ -45,7 +51,7 @@ export interface CreateOrderPayload {
     leverage: number;
     takeProfit?: number;
     stopLoss?: number;
-    balanceSnapshot: number;
+    balanceSnapshot: BalanceAsset[];
     enqueuedAt: number;
 }
 
@@ -54,7 +60,7 @@ export interface CloseOrderPayload {
     userId: string;
     closeReason: CloseReason;
     pnl?: number;
-    closedAt: string;
+    closedAt: number;
 }
 
 export interface PriceUpdatePayload {

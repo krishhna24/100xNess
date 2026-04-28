@@ -1,4 +1,4 @@
-import { Order } from "@repo/types";
+import { Order, CloseReason } from "@repo/types";
 import { prisma } from "@repo/db";
 import { state } from "./state";
 import { client } from "./client";
@@ -87,6 +87,8 @@ export async function processOrderLiquidation(
         console.log(`Closed order ${order.id} (${reason}): returned ${credit}`);
     }
 
+    const dbCloseReason: CloseReason = reason === "margin" ? "Liquidation" : reason;
+
     try {
         await prisma.order.update({
             where: { id: order.id },
@@ -95,7 +97,7 @@ export async function processOrderLiquidation(
                 pnl: Math.round(pnl * 10000),
                 closingPrice: Math.round(currentPriceForOrder * 10000),
                 closedAt: new Date(),
-                closeReason: reason as any,
+                closeReason: dbCloseReason,
             },
         });
     } catch (err) {
@@ -103,7 +105,7 @@ export async function processOrderLiquidation(
     }
 
     await client
-        .xadd(CALLBACK_QUEUE, "*", "id", order.id, "status", "closed", "reason", reason, "pnl", pnl.toString())
+        .xadd(CALLBACK_QUEUE, "*", "id", order.id, "status", "closed", "reason", dbCloseReason, "pnl", pnl.toString())
         .catch(err => console.error(`Failed to send ${context} liquidation callback:`, err));
 
     return { liquidated: true, pnl, reason };

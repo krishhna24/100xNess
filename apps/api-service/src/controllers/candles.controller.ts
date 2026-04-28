@@ -95,7 +95,8 @@ export const getCandles = async (req: Request, res: Response) => {
 
         const data = await response.json();
 
-        const processedData = data.map((candle: any) => ({
+        type BackpackCandle = { start: number; open: string; high: string; low: string; close: string; volume: string };
+        const processedData = (data as BackpackCandle[]).map((candle) => ({
             bucket: candle.start,
             symbol: asset,
             open: parseFloat(candle.open),

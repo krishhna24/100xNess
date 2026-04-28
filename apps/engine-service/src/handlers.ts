@@ -1,4 +1,4 @@
-import { Order } from "@repo/types";
+import { Order, CreateOrderPayload, CloseOrderPayload, CloseReason } from "@repo/types";
 import { prisma } from "@repo/db";
 import { state } from "./state";
 import { client } from "./client";
@@ -7,8 +7,9 @@ import { getMemBalance, setMemBalance, updateToDB } from "./balance";
 import { processOrderLiquidation } from "./liquidation";
 import { safeNum } from "./utils";
 
-export async function handlePriceUpdate(payload: any) {
-    const data = payload?.data || payload;
+export async function handlePriceUpdate(payload: unknown) {
+    const p = payload as Record<string, unknown> | null | undefined;
+    const data = (p?.data ?? payload) as Record<string, unknown> | null | undefined;
     if (!data?.s) return;
 
     const rawSymbol = typeof data.s === "string" && data.s.endsWith("_USDC")
@@ -37,13 +38,11 @@ export async function handlePriceUpdate(payload: any) {
     }
 }
 
-export async function handleCreateOrder(payload: any) {
+export async function handleCreateOrder(payload: CreateOrderPayload) {
     console.log(`[ENGINE] Processing create-order:`, payload);
-    const { id: orderId, userId, asset: rawAsset, side: rawSide, qty, leverage, balanceSnapshot, takeProfit, stopLoss } =
-        payload ?? {};
+    const { id: orderId, userId, asset: rawAsset, side, qty, leverage, balanceSnapshot, takeProfit, stopLoss } = payload;
 
     const asset = rawAsset ? String(rawAsset).toUpperCase() : "";
-    const side = rawSide as "long" | "short";
     const q = safeNum(qty, NaN);
     const lev = safeNum(leverage, 1);
 
@@ -134,9 +133,9 @@ export async function handleCreateOrder(payload: any) {
         .catch(err => console.error("Failed to send created callback:", err));
 }
 
-export async function handleCloseOrder(payload: any) {
+export async function handleCloseOrder(payload: CloseOrderPayload) {
     console.log(`[ENGINE] Processing close-order:`, payload);
-    const { orderId, userId, closeReason, pnl } = payload ?? {};
+    const { orderId, userId, closeReason, pnl } = payload;
 
     if (!orderId || !userId) {
         await client
@@ -187,7 +186,7 @@ export async function handleCloseOrder(payload: any) {
                 pnl: Math.round(finalPnl * 10000),
                 closingPrice: Math.round((closingPrice || order.openingPrice) * 10000),
                 closedAt: new Date(),
-                closeReason: (closeReason || "Manual") as any,
+                closeReason: (closeReason ?? "Manual") as CloseReason,
             },
         });
         state.open_orders.splice(idx, 1);

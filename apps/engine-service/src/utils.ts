@@ -1,4 +1,4 @@
-export function safeNum(n: any, def = 0): number {
+export function safeNum(n: unknown, def = 0): number {
     const v = Number(n);
     return Number.isFinite(v) ? v : def;
 }

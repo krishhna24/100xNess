@@ -48,7 +48,7 @@ export async function createSnapshot() {
                     stopLoss: order.stopLoss ? Math.round(order.stopLoss * 10000) : null,
                     margin,
                     createdAt: new Date(order.createdAt),
-                } as any,
+                },
             });
         }
 
@@ -63,18 +63,18 @@ export async function loadSnapshot() {
     try {
         const dbOrders = await prisma.order.findMany({ where: { status: "open" } });
 
-        state.open_orders = dbOrders.map((order: any) => ({
+        state.open_orders = dbOrders.map((order) => ({
             id: order.id,
             userId: order.userId,
             asset: "BTC",
             side: order.side as "long" | "short",
-            qty: order.qty / 100,
+            qty: Number(order.qty) / 100,
             leverage: order.leverage,
-            openingPrice: order.openingPrice / 10000,
+            openingPrice: Number(order.openingPrice) / 10000,
             createdAt: order.createdAt.getTime(),
             status: "open",
-            takeProfit: order.takeProfit && order.takeProfit > 0 ? order.takeProfit / 10000 : undefined,
-            stopLoss: order.stopLoss && order.stopLoss > 0 ? order.stopLoss / 10000 : undefined,
+            takeProfit: order.takeProfit && order.takeProfit > 0 ? Number(order.takeProfit) / 10000 : undefined,
+            stopLoss: order.stopLoss && order.stopLoss > 0 ? Number(order.stopLoss) / 10000 : undefined,
         }));
 
         console.log(`loaded ${state.open_orders.length} open orders from the database`);

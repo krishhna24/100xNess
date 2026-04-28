@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const CreateOrderBodySchema = z.object({
-    status: z.enum(["open", "closed"]),
     asset: z.string(),
     side: z.enum(["long", "short"]),
     qty: z.coerce.number(),

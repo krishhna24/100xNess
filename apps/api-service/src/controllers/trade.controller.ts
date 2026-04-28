@@ -34,20 +34,20 @@ export const getOrders = async (req: Request, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        const transformed = orders.map((order: any) => ({
+        const transformed = orders.map((order) => ({
             id: order.id,
             symbol: "BTC",
             orderType: order.side,
-            quantity: order.qty / 100,
-            price: order.openingPrice / 10000,
+            quantity: Number(order.qty) / 100,
+            price: Number(order.openingPrice) / 10000,
             status: order.status,
-            pnl: order.pnl / 10000,
+            pnl: order.pnl != null ? Number(order.pnl) / 10000 : null,
             createdAt: order.createdAt.toISOString(),
             closedAt: order.closedAt?.toISOString(),
-            exitPrice: order.closingPrice ? order.closingPrice / 10000 : undefined,
+            exitPrice: order.closingPrice ? Number(order.closingPrice) / 10000 : undefined,
             leverage: order.leverage,
-            takeProfit: order.takeProfit ? order.takeProfit / 10000 : undefined,
-            stopLoss: order.stopLoss ? order.stopLoss / 10000 : undefined,
+            takeProfit: order.takeProfit ? Number(order.takeProfit) / 10000 : undefined,
+            stopLoss: order.stopLoss ? Number(order.stopLoss) / 10000 : undefined,
             closeReason: order.closeReason,
         }));
 
@@ -125,11 +125,10 @@ export const createOrder = async (req: Request, res: Response) => {
                 userId,
                 asset,
                 side,
-                status: "open",
                 qty: Number(qty),
                 leverage: Number(leverage),
-                takeProfit: takeProfit != null ? Number(takeProfit) : null,
-                stopLoss: stopLoss != null ? Number(stopLoss) : null,
+                takeProfit: takeProfit != null ? Number(takeProfit) : undefined,
+                stopLoss: stopLoss != null ? Number(stopLoss) : undefined,
                 balanceSnapshot,
                 enqueuedAt: Date.now(),
             },
@@ -197,7 +196,7 @@ export const closeOrder = async (req: Request, res: Response) => {
         if (callback.status !== "closed")
             return res.status(400).json({ error: `Close failed: ${callback.status}` });
 
-        res.json({ message: "Order closed successfully", orderId });
+        res.status(200).json({ message: "Order closed successfully", orderId });
 
     } catch (err) {
         console.error("Error in closeOrder: ", err);
